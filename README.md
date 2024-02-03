@@ -3,6 +3,8 @@ Ansible Role: Shadowsocks-Rust
 
 Ansible Role that installs and manages [shadowsocks-rust](https://github.com/shadowsocks/shadowsocks-rust) on Linux hosts.
 
+Original role taken from <https://github.com/wietmann/ansible-role-shadowsocks-rust>
+
 Role downloads defined version of `shadowsocks-rust` from release page on GitHub, sets up process environment (create process user and group, add systemd unit files, add configuration files) and manages process instances via systemd. Currently `sslocal` and `ssserver` instanced service units are present.
 
 By default, Musl build for x86_64 is installed.
@@ -15,19 +17,19 @@ Python, Ansible >= 2.9
 Role Variables
 --------------
 
-|Variable|Deafule value|Description|
-|-|-|-|
-|`shadowsocks_rust_version`|`1.12.4`|Shadowsocks-rust version|
-|`shadowsocks_rust_bin_path`|`/usr/local/bin`|Path to directory where binaries will reside|
-|`shadowsocks_rust_linux_libc`|`musl`|Choose LibC version for Linux binary. See release page for specific version for available values|
-|`shadowsocks_rust_config_path`|`/etc/shadowsocks-rust`|Path to Shadowsocks-rust configuration files directory|
-|`shadowsocks_rust_user`|`shadowsocks-rust`|System user to run shadowsocks-rust process with|
-|`shadowsocks_rust_group`|`shadowsocks-rust`|System group to run shadowsocks-rust process with|
-|`shadowsocks_rust_config`|`[]`|List of Shadowsocks instances configurations|
-|`shadowsocks_rust_config[*].name`|-|Instance name (will be used as name for in systemd service after `@`)|
-|`shadowsocks_rust_config[*]state`|`present`|Whether to create or destroy instance. Available values: `present`, `absent`|
-|`shadowsocks_rust_config[*].type`|`server`|Instance type: `server`, `local`|
-|`shadowsocks_rust_config[*].config`|-|Dictionary representing Shadowsocks config file structure. See shadowsocks-rust documentation for available values.|
+| Variable                            | Default value           | Description                                                                                                         |
+| ----------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `shadowsocks_rust_version`          | `1.12.4`                | Shadowsocks-rust version                                                                                            |
+| `shadowsocks_rust_bin_path`         | `/usr/local/bin`        | Path to directory where binaries will reside                                                                        |
+| `shadowsocks_rust_linux_libc`       | `musl`                  | Choose LibC version for Linux binary. See release page for specific version for available values                    |
+| `shadowsocks_rust_config_path`      | `/etc/shadowsocks-rust` | Path to Shadowsocks-rust configuration files directory                                                              |
+| `shadowsocks_rust_user`             | `shadowsocks-rust`      | System user to run shadowsocks-rust process with                                                                    |
+| `shadowsocks_rust_group`            | `shadowsocks-rust`      | System group to run shadowsocks-rust process with                                                                   |
+| `shadowsocks_rust_config`           | `[]`                    | List of Shadowsocks instances configurations                                                                        |
+| `shadowsocks_rust_config[*].name`   | -                       | Instance name (will be used as name for in systemd service after `@`)                                               |
+| `shadowsocks_rust_config[*]state`   | `present`               | Whether to create or destroy instance. Available values: `present`, `absent`                                        |
+| `shadowsocks_rust_config[*].type`   | `server`                | Instance type: `server`, `local`                                                                                    |
+| `shadowsocks_rust_config[*].config` | -                       | Dictionary representing Shadowsocks config file structure. See shadowsocks-rust documentation for available values. |
 
 Dependencies
 ------------
@@ -46,6 +48,25 @@ Supported platforms
 
 Example Playbook
 ----------------
+
+`requirements.yml` file
+
+```yaml
+---
+roles:
+  - name: geoshapka.shadowsocks_rust
+    src: https://github.com/geoshapka/ansible-role-shadowsocks-rust.git
+    version: master
+    scm: git
+```
+
+after that run
+
+```bash
+ansible-galaxy install -r requirements.yml
+```
+
+to install role
 
 Setup 2 different shadowsocks servers on one host:
 
@@ -93,10 +114,11 @@ Setup 2 different shadowsocks servers on one host:
         state: present
 
   roles:
-    - role: wietmann.shadowsocks_rust
+    - role: geoshapka.shadowsocks_rust
 ```
 
 Client (`sslocal`)
+
 ```yaml
 ---
 - hosts: all
@@ -130,7 +152,48 @@ Client (`sslocal`)
         state: present
 
   roles:
-    - role: wietmann.shadowsocks_rust
+    - role: geoshapka.shadowsocks_rust
+```
+
+To use with v2ray:
+
+```yaml
+---
+- hosts: all
+  become: yes
+
+  vars:
+    shadowsocks_rust_config:
+      - name: server_home
+        state: present
+        type: server
+        config:
+          server: "0.0.0.0"
+          server_port: 12345
+          password: "VerySecretPassword1"
+          timeout: 60
+          method: "aes-256-gcm"
+          fast_open: true
+          plugin: "v2ray-plugin"
+          plugin_opts: "server"
+    _packages:
+      "Debian":
+        - xz-utils
+        - zip
+        - tar
+      "RedHat":
+        - xz
+        - zip
+        - tar
+
+  pre_tasks:
+    - name: Install dependencies
+      package:
+        name: "{{ _packages[ansible_os_family] }}"
+        state: present
+
+  roles:
+    - role: geoshapka.shadowsocks_rust
 ```
 
 Testing

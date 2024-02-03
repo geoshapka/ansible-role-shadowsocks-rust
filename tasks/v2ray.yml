@@ -28,7 +28,6 @@
     mode: 0755
   when: not v2ray_plugin_binary_stats.stat.exists or v2ray_plugin_binary_current_version.stdout_lines[0] != v2ray_plugin_version
 
-
 - name: Copy a unpacked v2ray-plugin file on the remote machine to {{ v2ray_plugin_bin_path }}
   ansible.builtin.copy:
     src: "/tmp/v2ray-plugin_linux_amd64"
