@@ -9,3 +9,6 @@ shadowsocks_rust_user: shadowsocks-rust
 shadowsocks_rust_group: shadowsocks-rust
 
 shadowsocks_rust_config: []
+
+v2ray_plugin_version: "v1.3.2"
+v2ray_plugin_bin_path: "/usr/local/bin"
