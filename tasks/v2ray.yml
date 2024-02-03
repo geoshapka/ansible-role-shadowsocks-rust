@@ -4,3 +4,37 @@
   ansible.builtin.stat:
     path: "{{ v2ray_plugin_bin_path }}/v2ray-plugin"
   register: v2ray_plugin_binary_stats
+
+- name: Get binary version
+  ansible.builtin.shell:
+    cmd: "{{ v2ray_plugin_bin_path }}/v2ray-plugin --version | awk 'NR==1{print $2}'"
+  when: v2ray_plugin_binary_stats.stat.exists
+  changed_when: false
+  failed_when: false
+  register: v2ray_plugin_binary_current_version
+
+- name: Build download URL
+  ansible.builtin.set_fact:
+    v2ray_plugin_download_url: "https://github.com/shadowsocks/v2ray-plugin/releases/download/{{ v2ray_plugin_version }}/v2ray-plugin-linux-amd64-{{ v2ray_plugin_version }}.tar.gz"
+  when:  v2ray_plugin_download_url is not defined
+
+- name: Fetch binary file tarball from Github
+  ansible.builtin.unarchive:
+    src: "{{ v2ray_plugin_download_url }}"
+    dest: "/tmp"
+    remote_src: true
+    owner: root
+    group: root
+    mode: 0755
+  when: not v2ray_plugin_binary_stats.stat.exists or v2ray_plugin_binary_current_version.stdout_lines[0] != v2ray_plugin_version
+
+
+- name: Copy a unpacked v2ray-plugin file on the remote machine to {{ v2ray_plugin_bin_path }}
+  ansible.builtin.copy:
+    src: "/tmp/v2ray-plugin_linux_amd64"
+    dest: "{{ v2ray_plugin_bin_path }}/v2ray-plugin"
+    remote_src: true
+    owner: root
+    group: root
+    mode: 0755
+  when: not v2ray_plugin_binary_stats.stat.exists or v2ray_plugin_binary_current_version.stdout_lines[0] != v2ray_plugin_version

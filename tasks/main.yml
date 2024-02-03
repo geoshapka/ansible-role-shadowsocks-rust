@@ -3,5 +3,5 @@
 - name: Include v2ray plugin install
   ansible.builtin.include_tasks: "v2ray.yml"
 
-# - name: Include shadowsocks install
-#   ansible.builtin.include_tasks: "shadowsocks.yml"
+- name: Include shadowsocks install
+  ansible.builtin.include_tasks: "shadowsocks.yml"
