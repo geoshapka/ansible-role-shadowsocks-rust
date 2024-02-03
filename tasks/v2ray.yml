@@ -3,4 +3,4 @@
 - name: Check whether binary is present
   ansible.builtin.stat:
     path: "{{ v2ray_plugin_bin_path }}/v2ray-plugin"
-  register: v2ray-plugin_binary_stats
+  register: v2ray_plugin_binary_stats
